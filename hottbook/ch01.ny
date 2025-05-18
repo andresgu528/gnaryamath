@@ -285,12 +285,27 @@ def unnamed.1_12_1_1
       ≔ ((A : Fib) (a : A .t) (C : (x : A .t) → Id (A .t) a x → Fib) →
          C a (refl a) .t → (x : A .t) → (p : Id (A .t) a x)
          → C x p .t) in
+    let Ind'_Id_eq_statement : Ind'_Id_statement → Type
+      ≔ Ind'_Id ↦
+        (A : Fib) (a : A .t) (C : (x : A .t) → Id (A .t) a x → Fib)
+        (c : C a (refl a) .t)
+        → Id (C a (refl a) .t) (Ind'_Id A a C c a (refl a)) c in
     let Ind_Id_statement
       ≔ (A : Fib) (C : (x y : A .t) → Id (A .t) x y → Fib) →
         ((x : A .t) → C x x (refl x) .t) → (x y : A .t) (p : Id (A .t) x y)
         → C x y p .t in
-    Ind'_Id_statement → Ind_Id_statement
-  ≔ Ind'_Id A C c x y p ↦ Ind'_Id A x (C x) (c x) y p
+    let Ind_Id_eq_statement : Ind_Id_statement → Type
+      ≔ Ind_Id ↦
+        (A : Fib) (C : (x y : A .t) → Id (A .t) x y → Fib)
+        (c : (x : A .t) → C x x (refl x) .t) (x : A .t)
+        → Id (C x x (refl x) .t) (Ind_Id A C c x x (refl x)) (c x) in
+    (Σ Ind'_Id_statement Ind'_Id_eq_statement)
+    → Σ Ind_Id_statement Ind_Id_eq_statement
+  ≔ Ind' ↦
+  let Ind'_Id ≔ Ind' .pr₁ in
+  let Ind'_Id_eq ≔ Ind' .pr₂ in
+  (A C c x y p ↦ Ind'_Id A x (C x) (c x) y p,
+   A C c x ↦ Ind'_Id_eq A x (C x) (c x))
 
 {`
 `Nothing is gained from this proof, since it is way easier to prove Ind'_Id_statement directly, as done in Ind'_Id_eq. Still, the true reason that I'm skipping it is because I don't know if it is possible to prove this using universes, since I'm not sure if we can prove that universes are fibrant.
