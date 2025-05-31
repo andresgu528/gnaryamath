@@ -7,11 +7,47 @@ option type boundaries ≔ implicit
 
 {` 1.2 Function types `}
 
+`Function types are primitive in Narya
+
+`Type
+def function : Type → Type → Type ≔ A B ↦ A → B
+
+`Function
+def apply_function (A B : Type) : (A → B) → A → B ≔ f a ↦ f a
+
+`Computation proof
+def uniq_function (A B : Type) (f : A → B) : Id (A → B) f (x ↦ f x) ≔ refl f
+
 
 {` 1.3 Universes and families `}
 
+`For the moment, Narya uses Type:Type
+
+`Type
+def universe : Type ≔ Type
+
+`Type
+def FamilyOfTypes (A : Type) : Type ≔ A → Type
+
+`Function
+def ConstantTypeFamily (A : Type) : Type → A → Type ≔ B x ↦ B
+
 
 {` 1.4 Dependent function types (Π-types) `}
+
+`In the Narya primitives it also holds that function types are a particular case of dependent function types 
+
+`Computation proof
+def unnamed.1_4_1 (A B : Type) : Id Type (Π A (x ↦ B)) (A → B) ≔ refl (A → B)
+
+`Function
+def apply_Π (A : Type) (B : A → Type) : ((x : A) → B x) → (a : A) → B a
+  ≔ f a ↦ f a
+
+`Computation proof
+def uniq_Π (A : Type) (B : A → Type) (f : (x : A) → B x)
+  : Id ((x : A) → B x) f (x ↦ f x)
+  ≔ refl f
 
 `Function
 def id (A : Type) : A → A ≔ x ↦ x
@@ -23,59 +59,94 @@ def swap (A B C : Type) : (A → B → C) → (B → A → C) ≔ g b a ↦ g a 
 {` 1.5 Product types `}
 
 `Type
-def CartesianProduct (A B : Type) : Type ≔ sig ( pr₁ : A, pr₂ : B )
+def CartesianProduct (A B : Type) : Type ≔ sig ( pr1 : A, pr2 : B )
 
 notation 2 CartesianProduct_notation : A "×" B ≔ CartesianProduct A B
 
 `Type
-def 𝟙 : Type ≔ data [ ★. ]
+def 𝟙 : Type ≔ sig ()
 
-`Functon
+`Definition
+def ★ : 𝟙 ≔ ()
+
+`Computation proofs
+def pr1_comput (A B : Type) (a : A) (b : B) : Id A (((a, b) : A × B) .pr1) a
+  ≔ refl a
+def pr2_comput (A B : Type) (a : A) (b : B) : Id B (((a, b) : A × B) .pr2) b
+  ≔ refl b
+
+`Function
 def rec_× (A B C : Type) : (A → B → C) → A × B → C
-  ≔ g x ↦ g (x .pr₁) (x .pr₂)
+  ≔ g z ↦ g (z .pr1) (z .pr2)
+`Computation proof
+def rec_×_comput (A B C : Type) (g : A → B → C) (a : A) (b : B)
+  : Id C (rec_× A B C g (a, b)) (g a b)
+  ≔ refl (g a b)
 
 `Function
-def rec_1 (C : Type) : C → 𝟙 → C ≔ c ↦ [ ★. ↦ c ]
-`Function
-def uniq_× (A B : Type) (x : A × B) : Id (A × B) (x .pr₁, x .pr₂) x ≔ refl x
+def rec_1 (C : Type) : C → 𝟙 → C ≔ c _ ↦ c
+`Computation proof
+def rec_1_comput (C : Type) (c : C) : Id C (rec_1 C c ★) c ≔ refl c
+
+`Computation proof
+def uniq_× (A B : Type) (x : A × B) : Id (A × B) (x .pr1, x .pr2) x ≔ refl x
 
 `Function
 def ind_× (A B : Type) (C : A × B → Type)
   : ((x : A) (y : B) → C (x, y)) → (x : A × B) → C x
-  ≔ g z ↦ g (z .pr₁) (z .pr₂)
+  ≔ g x ↦ g (x .pr1) (x .pr2)
+`Computation proof
+def ind_×_comput (A B : Type) (C : A × B → Type)
+  (g : (x : A) (y : B) → C (x, y)) (x : A) (y : B)
+  : Id (C (x, y)) (ind_× A B C g (x, y)) (g x y)
+  ≔ refl (g x y)
 
 `Function
-def ind_1 (C : 𝟙 → Type) : C ★. → (x : 𝟙) → C x ≔ c ↦ [ ★. ↦ c ]
+def ind_1 (C : 𝟙 → Type) : C ★ → (x : 𝟙) → C x ≔ c _ ↦ c
+`Computation proof
+def ind_1_comput (C : 𝟙 → Type) (c : C ★) : Id (C ★) (ind_1 C c ★) c ≔ refl c
 
-`Proof / Function
-def uniq_1 (x : 𝟙) : Id 𝟙 x ★. ≔ match x [ ★. ↦ refl (★. : 𝟙) ]
-
+`Computation proof
+def uniq_1 (x : 𝟙) : Id 𝟙 x ★ ≔ refl ★
 
 {` 1.6 Dependent pair types (Σ-types) `}
 
 `Type
-def Σ (A : Type) (B : A → Type) : Type ≔ sig ( pr₁ : A, pr₂ : B pr₁ )
+def Σ (A : Type) (B : A → Type) : Type ≔ sig ( pr1 : A, pr2 : B pr1 )
 
-`Type
-def alt.CartesianProduct (A B : Type) : Type ≔ Σ A (x ↦ B)
-
-notation 2 alt.CartesianProduct_notation : A "×Σ" B
-  ≔ alt.CartesianProduct A B
 
 `Function
 def rec_Σ (A : Type) (B : A → Type) (C : Type)
   : ((x : A) → B x → C) → Σ A B → C
-  ≔ g z ↦ g (z .pr₁) (z .pr₂)
+  ≔ g z ↦ g (z .pr1) (z .pr2)
+`Computation proof
+def rec_Σ_comput (A : Type) (B : A → Type) (C : Type) (g : (x : A) → B x → C)
+  (a : A) (b : B a)
+  : Id C (rec_Σ A B C g (a, b)) (g a b)
+  ≔ refl (g a b)
+
+`Computation proofs
+def pr1d_comput (A : Type) (B : A → Type) (a : A) (b : B a)
+  : Id A (((a, b) : Σ A B) .pr1) a
+  ≔ refl a
+def pr2d_comput (A : Type) (B : A → Type) (a : A) (b : B a)
+  : Id (B a) (((a, b) : Σ A B) .pr2) b
+  ≔ refl b
 
 `Function
 def ind_Σ (A : Type) (B : A → Type) (C : Σ A B → Type)
   : ((a : A) (b : B a) → C (a, b)) → (p : Σ A B) → C p
-  ≔ g z ↦ g (z .pr₁) (z .pr₂)
+  ≔ g p ↦ g (p .pr1) (p .pr2)
+`Computation proof
+def ind_Σ_comput (A : Type) (B : A → Type) (C : Σ A B → Type)
+  (g : (a : A) (b : B a) → C (a, b)) (a : A) (b : B a)
+  : Id (C (a, b)) (ind_Σ A B C g (a, b)) (g a b)
+  ≔ refl (g a b)
 
 `Function
 def ac (A B : Type) (R : A → B → Type)
   : ((x : A) → Σ B (y ↦ R x y)) → (Σ (A → B) (f ↦ (x : A) → R x (f x)))
-  ≔ g ↦ (x ↦ g x .pr₁, x ↦ g x .pr₂)
+  ≔ g ↦ (x ↦ g x .pr1, x ↦ g x .pr2)
 
 `Type
 def Magma : Type ≔ sig ( A : Type, m : A → A → A )
@@ -98,6 +169,13 @@ def 𝟘 : Type ≔ data []
 def rec_＋ (A B C : Type) : (A → C) → (B → C) → A ＋ B → C ≔ g0 g1 ↦ [
 | inl. a ↦ g0 a
 | inr. b ↦ g1 b]
+`Computation proofs
+def rec_＋_comput1 (A B C : Type) (g0 : A → C) (g1 : B → C) (a : A)
+  : Id C (rec_＋ A B C g0 g1 (inl. a)) (g0 a)
+  ≔ refl (g0 a)
+def rec_＋_comput2 (A B C : Type) (g0 : A → C) (g1 : B → C) (b : B)
+  : Id C (rec_＋ A B C g0 g1 (inr. b)) (g1 b)
+  ≔ refl (g1 b)
 
 `Function
 def rec_𝟘 (C : Type) : 𝟘 → C ≔ [ ]
@@ -106,6 +184,15 @@ def rec_𝟘 (C : Type) : 𝟘 → C ≔ [ ]
 def ind_＋ (A B : Type) (C : A ＋ B → Type)
   : ((a : A) → C (inl. a)) → ((b : B) → C (inr. b)) → (x : A ＋ B) → C x
   ≔ g0 g1 ↦ [ inl. a ↦ g0 a | inr. b ↦ g1 b ]
+`Computation proofs
+def ind_＋_comput1 (A B : Type) (C : A ＋ B → Type) (g0 : (a : A) → C (inl. a))
+  (g1 : (b : B) → C (inr. b)) (a : A)
+  : Id (C (inl. a)) (ind_＋ A B C g0 g1 (inl. a)) (g0 a)
+  ≔ refl (g0 a)
+def ind_＋_comput2 (A B : Type) (C : A ＋ B → Type) (g0 : (a : A) → C (inl. a))
+  (g1 : (b : B) → C (inr. b)) (b : B)
+  : Id (C (inr. b)) (ind_＋ A B C g0 g1 (inr. b)) (g1 b)
+  ≔ refl (g1 b)
 
 `Function
 def ind_𝟘 (C : 𝟘 → Type) : (z : 𝟘) → C z ≔ [ ]
@@ -220,7 +307,7 @@ def Ind_Id (A : Type) (C : (x y : A) → Id A x y → Type)
   refl (C x) a2 b2 .trr (c x)
 
 `Proof
-def Ind_Id_eq (A : Type) (C : (x y : A) → Id A x y → Type)
+def Ind_Id_comput (A : Type) (C : (x y : A) → Id A x y → Type)
   (c : (x : A) → C x x (refl x)) (x : A)
   : Id (C x x (refl x)) (Ind_Id A C c x x (refl x)) (c x)
   ≔
@@ -247,7 +334,7 @@ def Ind'_Id (A : Type) (a : A) (C : (x : A) → Id A a x → Type)
   refl C a2 b2 .trr c
 
 `Proof
-def Ind'_Id_eq (A : Type) (a : A) (C : (x : A) → Id A a x → Type)
+def Ind'_Id_comput (A : Type) (a : A) (C : (x : A) → Id A a x → Type)
   (c : C a (refl a))
   : Id (C a (refl a)) (Ind'_Id A a C c a (refl a)) c
   ≔
@@ -272,7 +359,7 @@ def unnamed.1_12_1_1
       ≔ ((A : Type) (a : A) (C : (x : A) → Id A a x → Type) → C a (refl a) →
          (x : A) → (p : Id A a x)
          → C x p) in
-    let Ind'_Id_eq_statement : Ind'_Id_statement → Type
+    let Ind'_Id_comput_statement : Ind'_Id_statement → Type
       ≔ Ind'_Id ↦
         (A : Type) (a : A) (C : (x : A) → Id A a x → Type) (c : C a (refl a))
         → Id (C a (refl a)) (Ind'_Id A a C c a (refl a)) c in
@@ -280,18 +367,18 @@ def unnamed.1_12_1_1
       ≔ (A : Type) (C : (x y : A) → Id A x y → Type) →
         ((x : A) → C x x (refl x)) → (x y : A) (p : Id A x y)
         → C x y p in
-    let Ind_Id_eq_statement : Ind_Id_statement → Type
+    let Ind_Id_comput_statement : Ind_Id_statement → Type
       ≔ Ind_Id ↦
         (A : Type) (C : (x y : A) → Id A x y → Type)
         (c : (x : A) → C x x (refl x)) (x : A)
         → Id (C x x (refl x)) (Ind_Id A C c x x (refl x)) (c x) in
-    (Σ Ind'_Id_statement Ind'_Id_eq_statement)
-    → Σ Ind_Id_statement Ind_Id_eq_statement
+    (Σ Ind'_Id_statement Ind'_Id_comput_statement)
+    → Σ Ind_Id_statement Ind_Id_comput_statement
   ≔ Ind' ↦
   let Ind'_Id ≔ Ind' .pr₁ in
-  let Ind'_Id_eq ≔ Ind' .pr₂ in
+  let Ind'_Id_comput ≔ Ind' .pr₂ in
   (A C c x y p ↦ Ind'_Id A x (C x) (c x) y p,
-   A C c x ↦ Ind'_Id_eq A x (C x) (c x))
+   A C c x ↦ Ind'_Id_comput A x (C x) (c x))
 
 `Proof
 def unnamed.1_12_1_2
@@ -299,7 +386,7 @@ def unnamed.1_12_1_2
       ≔ (A : Type) (C : (x y : A) → Id A x y → Type) →
         ((x : A) → C x x (refl x)) → (x y : A) (p : Id A x y)
         → C x y p in
-    let Ind_Id_eq_statement : Ind_Id_statement → Type
+    let Ind_Id_comput_statement : Ind_Id_statement → Type
       ≔ Ind_Id ↦
         (A : Type) (C : (x y : A) → Id A x y → Type)
         (c : (x : A) → C x x (refl x)) (x : A)
@@ -308,15 +395,15 @@ def unnamed.1_12_1_2
       ≔ (A : Type) (a : A) (C : (x : A) → Id A a x → Type) → C a (refl a) →
         (x : A) → (p : Id A a x)
         → C x p in
-    let Ind'_Id_eq_statement : Ind'_Id_statement → Type
+    let Ind'_Id_comput_statement : Ind'_Id_statement → Type
       ≔ Ind'_Id ↦
         (A : Type) (a : A) (C : (x : A) → Id A a x → Type) (c : C a (refl a))
         → Id (C a (refl a)) (Ind'_Id A a C c a (refl a)) c in
-    (Σ Ind_Id_statement Ind_Id_eq_statement)
-    → Σ Ind'_Id_statement Ind'_Id_eq_statement
+    (Σ Ind_Id_statement Ind_Id_comput_statement)
+    → Σ Ind'_Id_statement Ind'_Id_comput_statement
   ≔ Ind ↦
   let Ind_Id ≔ Ind .pr₁ in
-  let Ind_Id_eq ≔ Ind .pr₂ in
+  let Ind_Id_comput ≔ Ind .pr₂ in
   (A a C c x p ↦
      let D : (x y : A) → (Id A x y) → Type
        ≔ x y p ↦ (C : (z : A) → Id A x z → Type) → C x (refl x) → C y p in
@@ -327,7 +414,7 @@ def unnamed.1_12_1_2
      let D : (x y : A) → (Id A x y) → Type
        ≔ x y p ↦ (C : (z : A) → Id A x z → Type) → C x (refl x) → C y p in
      let d : (x : A) → D x x (refl x) ≔ x _ c ↦ c in
-     (Ind_Id_eq A D d a) (refl C) (refl c))
+     (Ind_Id_comput A D d a) (refl C) (refl c))
 
 {` 1.12.3 Disequality `}
 

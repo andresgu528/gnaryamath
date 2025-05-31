@@ -26,7 +26,7 @@ def Id2F_1 (A : Type) (B : A → Type) (a00 a01 : A) (a02 : Id A a00 a01)
   : Id Type (Id B a20 b00 b10) (Id B a21 b01 b11)
   ≔ B⁽ᵉᵉ⁾ a22 b02 b12
 
-def Id2F0 (A : Type) (B : A → Type) (a00 a01 : A) (a02 : Id A a00 a01)
+def Id2F_0 (A : Type) (B : A → Type) (a00 a01 : A) (a02 : Id A a00 a01)
   (a10 a11 : A) (a12 : Id A a10 a11) (a20 : Id A a00 a10)
   (a21 : Id A a01 a11) (a22 : A⁽ᵉᵉ⁾ a02 a12 a20 a21) (b00 : B a00)
   (b01 : B a01) (b02 : Id B a02 b00 b01) (b10 : B a10) (b11 : B a11)
@@ -44,7 +44,7 @@ def IdF2_1 (A : Type) (B : A → Type) (C : (a : A) → B a → Type) (a0 a1 : A
 def IdF2_0 (A : Type) (B : A → Type) (C : (a : A) → B a → Type) (a0 a1 : A)
   (a2 : Id A a0 a1) (b0 : B a0) (b1 : B a1) (b2 : Id B a2 b0 b1)
   : C a0 b0 → C a1 b1 → Type
-  ≔ c0 c1 ↦ refl C a2 b2 c0 c1
+  ≔ c0 c1 ↦ refl C a2 b2 c0 ?
 
 def Id2F2_2 (A : Type) (B : A → Type) (C : (a : A) → B a → Type)
   (a00 a01 : A) (a02 : Id A a00 a01) (a10 a11 : A) (a12 : Id A a10 a11)
