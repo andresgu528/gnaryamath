@@ -319,12 +319,3 @@ def ℕ_Semiring : isSemiring ℕ add 0 mult 1 ≔ (
   m_rz ≔ ?,
   dist_l ≔ ?,
   dist_r ≔ ?) 
-
-{`
-  a_assoc ≔
-    let rec ℕ_add_assoc : (x y z : ℕ) → Id ℕ (x + (y + z)) ((x + y) + z) ≔ [
-    | zero. ↦ y z ↦ refl (y + z)
-    | suc. x ↦ y z ↦ suc. (ℕ_add_assoc x y z)] in
-    ℕ_add_assoc,
-`}
-echo ℕ_Semiring .a_rz
