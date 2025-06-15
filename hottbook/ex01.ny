@@ -296,7 +296,7 @@ def isSemiring (X : Type) (a : X → X → X) (z : X) (m : X → X → X) (u : X
   a_assoc : (x y z : X) → Id X (a x (a y z)) (a (a x y) z),
   a_lz : (x : X) → Id X (a z x) x,
   a_rz : (x : X) → Id X (a x z) x,
-  comm_a : (x y : X) → Id X (a x y) (a y x),
+  a_comm : (x y : X) → Id X (a x y) (a y x),
   m_assoc : (x y z : X) → Id X (m x (m y z)) (m (m x y) z),
   m_lu : (x : X) → Id X (m u x) x,
   m_ru : (x : X) → Id X (m x u) x,
@@ -305,17 +305,28 @@ def isSemiring (X : Type) (a : X → X → X) (z : X) (m : X → X → X) (u : X
   dist_l : (x y z : X) → Id X (m x (a y z)) (a (m x y) (m x z)),
   dist_r : (x y z : X) → Id X (m (a x y) z) (a (m x z) (m y z)) )
 
-def ℕ_Semiring : isSemiring ℕ add 0 mult 1 ≔ (
-  a_assoc ≔
-    ind_ℕ (x ↦ (y z : ℕ) → Id ℕ (x + (y + z)) ((x + y) + z))
-      (y z ↦ refl (y + z)) (_ cx y z ↦ suc. (cx y z)),
-  a_lz ≔ x ↦ refl x,
-  a_rz ≔ ind_ℕ (x ↦ Id ℕ (x + 0) x) 0 (_ cx ↦ suc. cx),
-  comm_a ≔ ?,
-  m_assoc ≔ ?,
-  m_lu ≔ ?,
-  m_ru ≔ ?,
-  m_lz ≔ ?,
-  m_rz ≔ ?,
-  dist_l ≔ ?,
-  dist_r ≔ ?) 
+def ℕ_Semiring : isSemiring ℕ add 0 mult 1 ≔
+  let transitivity : (x y z : ℕ) → Id ℕ x y → Id ℕ y z → Id ℕ x z
+    ≔ x y z xy yz ↦ ℕ⁽ᵉᵉ⁾ (refl x) yz .trr xy in
+  let rec mvsuc : (x y : ℕ) → Id ℕ ((suc. x) + y) (x + suc. y) ≔ [
+  | zero. ↦ y ↦ suc. (refl y)
+  | suc. m ↦ y ↦ suc. (mvsuc m y)] in
+  (a_assoc ≔ [
+   | zero. ↦ y z ↦ refl (y + z)
+   | suc. n ↦ y z ↦ suc. (ℕ_Semiring .a_assoc n y z)],
+   a_lz ≔ x ↦ refl x,
+   a_rz ≔ [ zero. ↦ 0 | suc. n ↦ suc. (ℕ_Semiring .a_rz n) ],
+   a_comm ≔ [
+   | zero. ↦ [ zero. ↦ 0 | suc. n ↦ suc. (ℕ_Semiring .a_comm 0 n) ]
+   | suc. m ↦ y ↦
+       transitivity (suc. (m + y)) (suc. (y + m)) (y + suc. m)
+         (suc. (ℕ_Semiring .a_comm m y)) (mvsuc y m)],
+   m_assoc ≔ ?,
+   m_lu ≔ ?,
+   m_ru ≔ ?,
+   m_lz ≔ ?,
+   m_rz ≔ ?,
+   dist_l ≔ ?,
+   dist_r ≔ ?)
+
+echo ℕ_Semiring .a_comm 1 0
